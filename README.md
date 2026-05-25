@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🏭 JSW Machine Breakdown Prediction System
 
 A full-stack, professional-grade predictive maintenance system for JSW industrial machinery.
@@ -163,3 +164,6 @@ temperature,vibration,pressure,rpm,current_load,oil_level,noise_level,hours_sinc
 
 ## 📝 License
 Internal JSW use only. © 2025 JSW Group.
+=======
+# Machine-breakdown
+>>>>>>> 38e28b59413b88a262e3561c953cb9b0e1007eed
