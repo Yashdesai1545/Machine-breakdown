@@ -1,0 +1,8 @@
+{
+  "Air temperature [K]": "air_temperature",
+  "Process temperature [K]": "process_temperature",
+  "Rotational speed [rpm]": "rotational_speed",
+  "Torque [Nm]": "torque",
+  "Tool wear [min]": "tool_wear",
+  "Vibration [mm/s]": "vibration"
+}

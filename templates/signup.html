@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>JSW Sign Up</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+</head>
+<body class="login-body">
+  <div class="login-shell">
+    <div class="login-card">
+      <div class="login-brand">
+        <div class="brand-icon">⚙</div>
+        <div>
+          <h1>JSW</h1>
+          <p>Create your account</p>
+        </div>
+      </div>
+      <div class="login-copy">
+        <h2>Sign up for access</h2>
+        <p>Use a username like <strong>username@userjsw</strong> or enter just the left part and it will be normalized.</p>
+      </div>
+      {% if error %}
+      <div class="alert-box">{{ error }}</div>
+      {% endif %}
+      <form method="post" class="login-form">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" required autofocus class="form-input" placeholder="john@userjsw" />
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" required class="form-input" />
+        <label for="confirm_password">Confirm Password</label>
+        <input id="confirm_password" name="confirm_password" type="password" required class="form-input" />
+        <button type="submit" class="btn-primary login-submit">Create Account</button>
+      </form>
+      <div class="login-note">Already have an account? <a href="/login">Login here</a>.</div>
+    </div>
+  </div>
+</body>
+</html>

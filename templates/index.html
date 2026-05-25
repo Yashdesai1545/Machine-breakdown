@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>JSW Machine Breakdown Prediction System</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- ── TOP NAV ── -->
+<header class="topbar">
+  <div class="topbar-brand">
+    <div class="brand-icon">⚙</div>
+    <div class="brand-text">
+      <span class="brand-jsw">JSW</span>
+      <span class="brand-sub">Machine Breakdown Prediction</span>
+    </div>
+  </div>
+  <nav class="topbar-nav">
+    <button class="nav-btn active" data-section="dashboard">Dashboard</button>
+    <button class="nav-btn" data-section="predict">Predict</button>
+    <button class="nav-btn" data-section="analytics">Analytics</button>
+    <button class="nav-btn" data-section="machines">Machines</button>
+    <button class="nav-btn" data-section="alerts">Alerts <span id="alert-badge" class="badge">0</span></button>
+  </nav>
+  <div class="topbar-status">
+    <span class="status-dot pulse"></span>
+    <span class="status-txt">LIVE MONITORING</span>
+    <span id="clock" class="clock"></span>
+    <span class="user-label">{{ session.username }}</span>
+    <a class="logout-btn" href="/logout">Logout</a>
+  </div>
+</header>
+
+<!-- ── MAIN LAYOUT ── -->
+<main class="app-body">
+
+<!-- ════════════════════════════ DASHBOARD SECTION ════════════════════════════ -->
+<section id="section-dashboard" class="section active">
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon green">📊</div>
+      <div class="kpi-data">
+        <div class="kpi-label">Predictions Today</div>
+        <div class="kpi-value" id="kpi-predictions">—</div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon red">⚠️</div>
+      <div class="kpi-data">
+        <div class="kpi-label">Critical Alerts Today</div>
+        <div class="kpi-value" id="kpi-critical">—</div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon orange">🔔</div>
+      <div class="kpi-data">
+        <div class="kpi-label">Unacknowledged Alerts</div>
+        <div class="kpi-value" id="kpi-alerts">—</div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon purple">📋</div>
+      <div class="kpi-data">
+        <div class="kpi-label">Dataset Records</div>
+        <div class="kpi-value" id="kpi-dataset">500</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart Row 1 -->
+  <div class="chart-row">
+    <div class="chart-card wide">
+      <div class="chart-header">
+        <h3>Breakdown Events — Last 30 Days</h3>
+        <div class="chart-controls">
+          <select id="timeline-days" onchange="loadTimeline()">
+            <option value="14">14 days</option>
+            <option value="30" selected>30 days</option>
+            <option value="60">60 days</option>
+          </select>
+        </div>
+      </div>
+      <div class="chart-body"><canvas id="chart-timeline"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header"><h3>Risk Level Distribution</h3></div>
+      <div class="chart-body"><canvas id="chart-distribution"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Chart Row 2 — Dataset Charts -->
+  <div class="section-title">Dataset Insights (500 Machine Records)</div>
+  <div class="chart-row">
+    <div class="chart-card">
+      <div class="chart-header"><h3>Failure Rate by Machine Type</h3></div>
+      <div class="chart-body"><canvas id="chart-type-failure"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><h3>Failure Root Causes</h3></div>
+      <div class="chart-body"><canvas id="chart-failure-causes"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><h3>Tool Wear vs Failures</h3></div>
+      <div class="chart-body"><canvas id="chart-toolwear-bins"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Chart Row 3 -->
+  <div class="chart-row">
+    <div class="chart-card wide">
+      <div class="chart-header"><h3>Top 15 Machines by Failure Count (Dataset)</h3></div>
+      <div class="chart-body"><canvas id="chart-machine-failures"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><h3>Sensor Avg: Failure vs Normal</h3></div>
+      <div class="chart-body"><canvas id="chart-sensor-comparison"></canvas></div>
+    </div>
+  </div>
+
+
+
+</section>
+
+<!-- ════════════════════════════ PREDICT SECTION ════════════════════════════ -->
+<section id="section-predict" class="section">
+
+  <div class="predict-layout">
+
+    <!-- LEFT: Input Form -->
+    <div class="predict-form-panel">
+      <div class="panel-header">
+        <h2>Sensor Input</h2>
+        <p>Enter real-time sensor values to predict breakdown risk</p>
+      </div>
+
+      <div class="form-group">
+        <label>Select Machine</label>
+        <div class="search-panel">
+          <input id="pred-machine-search" class="form-input" type="search"
+            placeholder="Type machine ID (e.g. CB-01R1) and press Enter"
+            aria-label="Search machine for prediction"
+            oninput="filterMachineSelect('pred-machine', 'pred-machine-search')"
+            onkeydown="searchMachineOnEnter(event, 'pred-machine', 'pred-machine-search')" />
+          <button type="button" class="btn-secondary" onclick="selectMachineFromSearch('pred-machine', 'pred-machine-search')">Go</button>
+        </div>
+        <small>Search by machine ID or name, then click Go or press Enter.</small>
+        <select id="pred-machine" class="form-select" onchange="loadSelectedMachineSensors()">
+          <option value="">-- Select Machine --</option>
+        </select>
+      </div>
+
+      <div class="sensor-grid" id="sensor-inputs">
+        <!-- Generated by JS from /api/feature-ranges -->
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-primary" onclick="runPrediction()">
+          <span>⚡ Run Prediction</span>
+        </button>
+        <button class="btn-secondary" onclick="resetSensors()">
+          ↺ Reset
+        </button>
+      </div>
+
+      <!-- CSV Batch Upload -->
+      <div class="batch-upload">
+        <div class="batch-title">📂 Batch Prediction (CSV Upload)</div>
+        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('csv-file').click()">
+          <div class="drop-icon">⬆</div>
+          <div>Drop CSV file here or click to upload</div>
+          <div class="drop-hint">Columns: Air temperature [K], Process temperature [K], Rotational speed [rpm], Torque [Nm], Tool wear [min], Vibration [mm/s]</div>
+        </div>
+        <input type="file" id="csv-file" accept=".csv" style="display:none" onchange="uploadCSV(event)"/>
+        <div id="batch-result" class="batch-result" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Result Panel -->
+    <div class="predict-result-panel">
+      <div class="panel-header">
+        <h2>Prediction Result</h2>
+      </div>
+
+      <div id="result-placeholder" class="result-placeholder">
+        <div class="placeholder-icon">🤖</div>
+        <p>Run a prediction to see results here</p>
+      </div>
+
+      <div id="result-content" style="display:none">
+        <!-- Risk Gauge -->
+        <div class="gauge-wrapper">
+          <canvas id="chart-gauge" width="280" height="160"></canvas>
+          <div class="gauge-label">
+            <div class="gauge-score" id="gauge-score">—</div>
+            <div class="gauge-risk" id="gauge-risk">—</div>
+          </div>
+        </div>
+
+        <!-- Confidence Bars -->
+        <div class="confidence-bars">
+          <div class="conf-item">
+            <span>Random Forest</span>
+            <div class="conf-bar-wrap">
+              <div class="conf-bar rf-bar" id="rf-bar"></div>
+            </div>
+            <span id="rf-val">—</span>
+          </div>
+          <div class="conf-item">
+            <span>Gradient Boost</span>
+            <div class="conf-bar-wrap">
+              <div class="conf-bar gb-bar" id="gb-bar"></div>
+            </div>
+            <span id="gb-val">—</span>
+          </div>
+        </div>
+
+        <!-- Recommendation -->
+        <div class="recommendation-box" id="recommendation-box">
+          <div id="recommendation-text">—</div>
+        </div>
+
+        <!-- Radar Chart -->
+        <div class="radar-wrap">
+          <div class="chart-header"><h3>Sensor Profile vs Normal</h3></div>
+          <canvas id="chart-radar"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ════════════════════════════ ANALYTICS SECTION ════════════════════════════ -->
+<section id="section-analytics" class="section">
+
+  <div class="analytics-controls">
+    <div class="form-group inline search-group">
+      <label>Machine</label>
+      <div class="search-panel">
+        <input id="analytics-machine-search" class="form-input" type="search"
+          placeholder="Type machine ID (e.g. CB-01R1) and press Enter"
+          aria-label="Search machine for analytics"
+          oninput="filterMachineSelect('analytics-machine', 'analytics-machine-search')"
+          onkeydown="searchMachineOnEnter(event, 'analytics-machine', 'analytics-machine-search')" />
+        <button type="button" class="btn-secondary" onclick="selectMachineFromSearch('analytics-machine', 'analytics-machine-search')">Go</button>
+      </div>
+      <small>Search by machine ID or name, then click Go or press Enter.</small>
+      <select id="analytics-machine" onchange="loadAnalytics()" class="form-select">
+        <option value="">All Machines</option>
+        <!-- populated dynamically from dataset -->
+      </select>
+    </div>
+    <div class="form-group inline">
+      <label>Trend Period</label>
+      <select id="analytics-days" onchange="loadAnalytics()" class="form-select">
+        <option value="14" selected>14 days</option>
+        <option value="30">30 days</option>
+        <option value="60">60 days</option>
+      </select>
+    </div>
+    <div class="form-group inline">
+      <label>View Mode</label>
+      <select id="analytics-mode" onchange="switchAnalyticsMode()" class="form-select">
+        <option value="db">Prediction History (DB)</option>
+        <option value="dataset">Dataset Overview</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- DB Mode: Trend + Importance -->
+  <div id="analytics-db-view">
+    <div class="chart-row">
+      <div class="chart-card wide">
+        <div class="chart-header"><h3>Risk Score Trend</h3></div>
+        <div class="chart-body"><canvas id="chart-trend"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><h3>Feature Importance</h3></div>
+        <div class="chart-body"><canvas id="chart-importance"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Predictions Table -->
+    <div class="table-card">
+      <div class="table-header">
+        <h3>Recent Predictions Log</h3>
+        <button class="btn-secondary small" onclick="exportCSV()">⬇ Export CSV</button>
+      </div>
+      <div class="table-wrapper">
+        <table id="pred-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Machine</th>
+              <th>Timestamp</th>
+              <th>Air Temp (K)</th>
+              <th>Proc Temp (K)</th>
+              <th>Speed (RPM)</th>
+              <th>Torque (Nm)</th>
+              <th>Tool Wear (min)</th>
+              <th>Vibration (mm/s)</th>
+              <th>Risk Score</th>
+              <th>Risk Level</th>
+              <th>Breakdown</th>
+            </tr>
+          </thead>
+          <tbody id="pred-table-body">
+            <tr><td colspan="12" class="table-empty">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dataset Mode: per-machine sensor profile -->
+  <div id="analytics-dataset-view" style="display:none">
+    <div class="chart-row">
+      <div class="chart-card wide">
+        <div class="chart-header">
+          <h3 id="dataset-profile-title">Sensor Profile — All Machines (Dataset Avg)</h3>
+        </div>
+        <div class="chart-body"><canvas id="chart-dataset-radar"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><h3>Failure Rate by Type (Dataset)</h3></div>
+        <div class="chart-body"><canvas id="chart-analytics-type"></canvas></div>
+      </div>
+    </div>
+    <div class="dataset-profile-stats" id="dataset-profile-stats">
+      <!-- stats cards filled by JS -->
+    </div>
+  </div>
+
+</section>
+
+<!-- ════════════════════════════ MACHINES SECTION ════════════════════════════ -->
+<section id="section-machines" class="section">
+  <div class="section-title">Registered Machines
+    <span class="machines-count-badge" id="machines-count-badge"></span>
+  </div>
+  <div class="machines-filter-bar">
+    <select id="machines-type-filter" class="form-select" onchange="filterMachinesGrid()">
+      <option value="">All Types</option>
+      <option value="H">Heavy (H)</option>
+      <option value="M">Medium (M)</option>
+      <option value="L">Light (L)</option>
+    </select>
+  </div>
+  <div class="machines-grid" id="machines-grid">
+    <!-- filled by JS -->
+  </div>
+</section>
+
+<!-- ════════════════════════════ ALERTS SECTION ════════════════════════════ -->
+<section id="section-alerts" class="section">
+  <div class="section-title">System Alerts</div>
+  <div class="alerts-list" id="alerts-list">
+    <!-- filled by JS -->
+  </div>
+</section>
+
+</main>
+
+<!-- ── TOAST ── -->
+<div id="toast" class="toast"></div>
+
+<!-- ── LOADING OVERLAY ── -->
+<div id="loading" class="loading-overlay" style="display:none">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Processing...</div>
+</div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

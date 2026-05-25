@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>JSW Login</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+</head>
+<body class="login-body">
+  <div class="login-shell">
+    <div class="login-card">
+      <div class="login-brand">
+        <div class="brand-icon">⚙</div>
+        <div>
+          <h1>JSW</h1>
+          <p>Machine Breakdown Prediction</p>
+        </div>
+      </div>
+      <div class="login-copy">
+        <h2>Sign in to continue</h2>
+        <p>Enter your username and password to access the dashboard.</p>
+      </div>
+      {% if error %}
+      <div class="alert-box">{{ error }}</div>
+      {% endif %}
+      <form method="post" class="login-form">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" required autofocus class="form-input" placeholder="john@userjsw" />
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" required class="form-input" />
+        <button type="submit" class="btn-primary login-submit">Login</button>
+      </form>
+      <div class="login-note">Don't have an account? <a href="/signup">Create one</a>.</div>
+    </div>
+  </div>
+</body>
+</html>
