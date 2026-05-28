@@ -13,17 +13,16 @@ import pymysql.cursors
 
 # ── MySQL Connection Config ─────────────────────────────────────────────────
 DB_CONFIG = {
-    "host":     os.environ.get("MYSQL_HOST",     "localhost"),
-    "port":     int(os.environ.get("MYSQL_PORT", 3306)),
-    "user":     os.environ.get("MYSQL_USER",     "root"),
-    "password": os.environ.get("MYSQL_PASSWORD", "root1527"),          # ← set your password
-    "database": os.environ.get("MYSQL_DB",       "jsw_breakdown"),
-    "charset":  "utf8mb4",
+    "host": os.environ.get("MYSQLHOST"),
+    "port": int(os.environ.get("MYSQLPORT", 3306)),
+    "user": os.environ.get("MYSQLUSER"),
+    "password": os.environ.get("MYSQLPASSWORD"),
+    "database": os.environ.get("MYSQLDATABASE"),
+    "charset": "utf8mb4",
     "cursorclass": pymysql.cursors.DictCursor,
     "autocommit": False,
 }
-
-DATASET_PATH = "dataset/machine_data_new_502.csv"
+DATASET_PATH = "dataset/machine_data_new_504.csv"
 
 # Type → department mapping
 TYPE_DEPT = {
