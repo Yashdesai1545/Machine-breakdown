@@ -7,6 +7,10 @@ import warnings
 warnings.filterwarnings("ignore")
 
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import pandas as pd
 import numpy as np
 from functools import wraps
@@ -34,7 +38,12 @@ CORS(app)
 app.config["UPLOAD_FOLDER"]      = "dataset/uploaded_logs"
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
 
-DATASET_PATH = "dataset/machine_data_new_502.csv"
+def initialize_database():
+    init_db()
+
+initialize_database()
+
+DATASET_PATH = "dataset/machine_data_new_504.csv"
 
 os.makedirs("dataset/uploaded_logs", exist_ok=True)
 os.makedirs("reports", exist_ok=True)
@@ -452,7 +461,7 @@ def api_feature_ranges():
 
 
 # ── Startup ────────────────────────────────────────────────────────
-from waitress import serve
+import os
 
 if __name__ == "__main__":
     print("=" * 50)
@@ -464,11 +473,10 @@ if __name__ == "__main__":
 
     try:
         load_model()
-        # seed_demo_data()
 
     except FileNotFoundError:
         print("Model not found. Run: python train_model.py")
 
-    print("Starting at http://127.0.0.1:55000")
+    port = int(os.environ.get("PORT", 5000))
 
-    serve(app, host="127.0.0.1", port=55000)
+    app.run(host="0.0.0.0", port=port)

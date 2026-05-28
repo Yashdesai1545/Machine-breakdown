@@ -4,6 +4,9 @@ Machines are seeded directly from machine_data_new_502.csv (502 rows, 60 unique 
 """
 
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 import pandas as pd
 import pymysql
 import pymysql.cursors

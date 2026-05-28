@@ -68,13 +68,38 @@ Expected output:
 - Scaler saved to `model/scaler.pkl`
 - Accuracy ~92%+, ROC-AUC ~0.97+
 
-### 4. Start the Flask server
+### 4. Configure environment variables
+Create a `.env` file in the project root or copy `.env.example`.
+Set the MySQL connection to a shared database server if you want multi-device access.
+
+Example `.env` values:
+```env
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=root1527
+MYSQL_DB=jsw_breakdown
+SECRET_KEY=a-very-secret-key-123
+```
+
+### 5. Start the Flask server
 ```bash
 python app.py
 ```
 
-### 5. Open the dashboard
-Navigate to: **http://localhost:5000**
+### 6. Open the dashboard
+Navigate to: **http://localhost:55000**
+
+---
+
+## 🌐 Multi-device deployment
+For long-term access from multiple laptops or devices, point every instance to the same MySQL database host and database name.
+
+- Use a shared MySQL server (network host, VPS, or managed cloud DB)
+- Set `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, and `MYSQL_DB`
+- Run the app on each device using the same configuration
+
+If you are using `.env`, keep the same database credentials in the shared DB server configuration.
 
 ---
 

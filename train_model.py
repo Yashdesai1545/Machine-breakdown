@@ -12,8 +12,13 @@ from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import (classification_report, roc_auc_score,
-                             accuracy_score, f1_score)
+from sklearn.metrics import (
+    classification_report,
+    roc_auc_score,
+    accuracy_score,
+    f1_score,
+    confusion_matrix
+)
 from sklearn.utils import resample
 import warnings
 warnings.filterwarnings('ignore')
@@ -29,17 +34,19 @@ RAW_COLS = {
 
 FEATURES = list(RAW_COLS.values())
 TARGET   = "Machine failure"
-DATASET_PATH = "dataset/machine_data_new_502.csv"
+DATASET_PATH = "dataset/machine_data_new_504.csv"
 
 
 def load_and_clean(path):
     print(f"Loading dataset: {path}")
     df = pd.read_csv(path)
+    print("Duplicates:", df.duplicated().sum())
     df = df.rename(columns=RAW_COLS)
     keep = FEATURES + [TARGET, "Machine Name", "Machine ID", "Type", "TWF", "HDF", "PWF", "OSF"]
     df = df[[c for c in keep if c in df.columns]]
     df = df.dropna(subset=FEATURES + [TARGET])
     print(f"Shape: {df.shape}, Failure rate: {df[TARGET].mean()*100:.1f}%")
+    print(df[TARGET].value_counts())
     return df
 
 
@@ -67,9 +74,11 @@ def train(df_raw):
     X_train_sc = scaler.fit_transform(X_train_bal)
     X_test_sc = scaler.transform(X_test)
 
-    rf = RandomForestClassifier(n_estimators=300, max_depth=10,
+    rf = RandomForestClassifier(n_estimators=100, max_depth=4,
                                 class_weight="balanced", random_state=42, n_jobs=-1)
     rf.fit(X_train_sc, y_train_bal)
+    print("RF Train Accuracy:", rf.score(X_train_sc, y_train_bal))
+    print("RF Test Accuracy :", rf.score(X_test_sc, y_test))
 
     gb = GradientBoostingClassifier(n_estimators=150, learning_rate=0.08,
                                     max_depth=4, subsample=0.8, random_state=42)
@@ -84,10 +93,11 @@ def train(df_raw):
     print(f"F1-Score          : {f1_score(y_test, ens_pred)*100:.2f}%")
     print(f"ROC-AUC           : {roc_auc_score(y_test, ens_prob):.4f}")
     print(classification_report(y_test, ens_pred, target_names=["Normal","Failure"]))
+    print(confusion_matrix(y_test, ens_pred))
 
     cv = cross_val_score(
         Pipeline([('scaler', StandardScaler()), ('rf', RandomForestClassifier(
-            n_estimators=300, max_depth=10, class_weight='balanced', random_state=42, n_jobs=-1))]),
+            n_estimators=100, max_depth=4, class_weight='balanced', random_state=42, n_jobs=-1))]),
         X, y, cv=5, scoring='roc_auc')
     print(f"5-Fold CV ROC-AUC: {cv.mean():.4f} +/- {cv.std():.4f}")
 

@@ -29,7 +29,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 // ══════════════════ CLOCK ══════════════════
 function startClock() {
   const el   = document.getElementById("clock");
-  const tick = () => { el.textContent = new Date().toLocaleTimeString("en-IN", { hour12: false }); };
+  const tick = () => {
+    el.textContent = new Date().toLocaleString("en-IN", {
+      dateStyle: "medium",
+      timeStyle: "medium",
+      hour12: false
+    });
+  };
   tick();
   setInterval(tick, 1000);
 }
